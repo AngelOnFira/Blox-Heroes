@@ -1,0 +1,110 @@
+7/20/2014; Add self as player
+
+7/20/2014; Add host to have movement in lobby, have host sent out its own location, make lobby nice, check what the user and
+host are sending out to make sure that it will work.
+
+7/20/2014; Looks like messages are deleting themselfs after I send a new message. Posted on forum, look into answer. Also
+fix all previous problems, nums do not appear to be sending.
+
+7/21/2014; Messages seem to be working properly, trying to get server to talk to client with command 008 in checkinputslobby(),
+testing out with test udp server.bb, change .bb to allow the client to join then see what is being sent. get nums going back
+and fourth.
+
+7/29/2014; Messages 008 are sending but for some reason they are not getting to the host althought they can get to server.bb, I think that it is because UDP messages getting deleted or something like that.
+
+8/04/2014; A message that was sent to the server when the server allowed a player to join was clogging the server for some reason and it wouldn't let anything come in. Started moving stuff around on the lobby screen, add 3D objects and remove any bugs and make the lobby look good. Left off with message 008 and drawlobby().
+
+8/05/2014; Working on drawing the 3D objects, sending the information and recieving. Looking to link the players own mouvement to their own player type, just makeing sure that the client does have its own type that is first on the list so I can just hit player.player=First player
+
+8/07/2014; Working on making it look nice, the proper cubes are moving now except for the client, and the check to make sure that the client is connected needs improvements, as well as far as seeing who sent the message when it comes to looking throught the type.
+
+8/10/2014;
+-Looks like the player timer should be working but sometimes it is dropping the player too early. Also the client's blocks are still doing funny things.
+-Looks like the client has the server in the type before itself unlike the host, so changing things around so that the movement is based on the username of the client/server.
+
+8/11/2014; The server checks to see that the client is still there is working and the client seeing that hosts are there at the hosts menu is working, need to now make sure that the host is still sending messages which can be done from the client's 002 by adding a last recieve. Keep working on improving server-client connections and making the menu look nicer and work better.
+
+8/12/2014;
+-The server is properly sending the client the position information of the clients that are already playing, and colour should be the next thing to add. The client is also able to see if the host is still there and will exit and return to the lan search if it has lost connection. Next things to do is make sure that esc will always go back to the previous menu and reset any variables.
+-Working on importing maps, the map is mostly working but for some reason the cubes aren't drawing in the right places. The server is sending the client the colours properly as well as movement and rotation.
+
+8/13/2014;
+-Fixed the map loading, now the server just needs to send the map to the client when they go to the lobby, and send it when they are joining the server.
+-Working on random colours, so far it is just black so one of the variables is not working.
+-Colours are now working with the algorithm and are sending properly when a new player connects.
+-Client should now be able to connect to any lan server now, needs testing, next steps to work on are making the lobby map work, and fixing any glitches, then working on better menus.
+
+8/14/2014;
+-I need to make the pings averaged over a few checks so that the pings arent too inconsitant. Also need to add text on each hosts head, and add collisions.
+-Averaging needs to have the variables looked at.
+-Radar needs to send information to ask for finding hosts, make radar cooler, working on clearing map when esc, think of ways to ask the server if they want to exit, fix all variables that glitch when you go back to the last menu, send leaving information when leaving server to say that you're leaving. Last worked on checkinputslobby.
+
+8/15/2014;
+-Look into variables;
+	-usertype
+	-place
+-Zeros are
+	-testtimer
+	-clicktimer:reset
+	-timerepeat
+	-hostipnum
+	-hostport
+	-currentkeycode:reset
+	-usernames
+	-hostcamera
+	-hostmap
+-Other players not cleared and one more block
+-Players should now send the server a message that they are leaving and the server should sent the info to all of the other players, not tested yet though. Also some variables still need to be zeroed to exit out of a match.
+-For some reason the host is getting the clients join message 2 times.
+
+8/16/2014; The server is still sending 2 messages to the player and from the looks of this, the computer is coming up with 2 ips for itself.
+
+8/17/2014;
+-The server was sending the player its own information as if it were another player. Fix the condition that stops this.
+-The server is sending the player info properly now and is not going too fast, and the map reveal is working, need to add map remove for when changing maps. Look into which speeds work best.
+
+8/18/2014;
+-Working on the chatbox, mainly the type that keeps all of the messages at the moment. Should almost test fine, just need to add it to draw lobby.
+
+8/19/2014;
+-Chatbox almost ready, just making a variable to see how many chat messages there aleady are so that the program dosent try to grab empty ones.
+-Chat queue finished and working, not sending to clients, and clients cannot find the server but the server is probably sending itself messages again or else the network is not working. IP is 10.254.124.72, and it works when I turn off wifi. This is probably because of subnet masks, look into that. It works when turned off and there are just a few problems when sending text.
+
+8/20/2014;
+-Fixed host adding user 2 times. When host sends to user, user prints 2 times. When user types it does not add it and it does not send it.
+-Client and server are now able to send each other messages properly.
+
+8/21/2014;
+-For hosts esc remove hostcamera, myuesrname, hostmap
+-For clients esc remove usertype, myusername, lastradar, lansearchplayercube
+
+Main loop()
+	if mainmenu
+		getinputs
+		logic
+		draw
+	endif
+	if othermenu
+		getinputs
+		logic
+		draw
+	endif
+	if lobby
+
+8/28/2014;
+-Got down to runclient lan replaceing variables, some need to have a 1 time run before they start looping, and those can be found wherever there is a repeat forever.
+
+9/28/2014;
+-Working on getting map to hide when host starts.
+
+1/1/2015;
+-Known issues; No map when start, no send info until first move, no movement
+-No map showing unless you go from quick key, still no movement
+
+5/12/2015;
+-Lol new years resolutions
+
+11/21/2015;
+-Fixed chat boxes and messages that were pointing to wrong places
+-Fixed when host started game in lobby
+-Need to still add send movement and stuff ingame, make game rules
