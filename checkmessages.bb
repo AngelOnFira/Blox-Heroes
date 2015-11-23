@@ -2,7 +2,6 @@ Function checkmessages(stream)
 	While RecvUDPMsg(stream)
 		readstringstream$=ReadString(stream)
 		typeofmsg$=Mid$(readstringstream,1,3)
-		DebugLog readstringstream
 		;Host revieves message from client looking for a server
 		If typeofmsg="002" And usertype="host"
 			WriteString(stream,"003")
@@ -28,17 +27,16 @@ Function checkmessages(stream)
 				newhost\lastrecieve=MilliSecs()
 				newhost\cube=CreateCube()
 				EntityType newhost\cube,1
-			RotateEntity newhost\cube,0,0,Rnd(-180,180)
-
+				RotateEntity newhost\cube,0,0,Rnd(-180,180)
 			EndIf
 		EndIf
 		;Ping test
 		If typeofmsg="035"
 			testtimer=MilliSecs()-testtimer
 		EndIf
+		
 		;Host recieves message asking if player can join
 		If typeofmsg="004"
-			DebugLog "004"
 			usernames=Mid$(readstringstream,4,30)
 			usernames=Trim(usernames)
 			
@@ -50,6 +48,8 @@ Function checkmessages(stream)
 			Next
 			
 			If addplayer=True
+				currentPlayerType=currentPlayerType+1
+				
 				newplayer.player=New player
 				newplayer\ip=UDPMsgIP(stream)
 				newplayer\port=UDPMsgPort(stream)
@@ -58,6 +58,7 @@ Function checkmessages(stream)
 				ScaleEntity newplayer\cube,.99,.99,1.01
 				newplayer\lastcheck=MilliSecs()
 				newplayer\lastrecieve=MilliSecs()
+				newplayer\collisionType=currentPlayerType
 				
 				playercolour(usernames)
 							
@@ -73,17 +74,17 @@ Function checkmessages(stream)
 				Next
 				
 				WriteString(stream,"005")
-				WriteString(stream,LSet$(red,3)+""+LSet$(green,3)+""+LSet$(blue,3))
 				For players.player=Each player
 					If players\username<>usernames
 						WriteString(stream,LSet$(players\username,30)+""+LSet$(players\ip,11)+""+LSet$(players\port,5))
 						WriteString(stream,LSet$(EntityX(players\cube),6)+""+LSet$(EntityY(players\cube),6))
 						WriteString(stream,LSet$(EntityRoll(players\cube),6))
 						WriteString(stream,LSet$(players\red,3)+""+LSet$(players\green,3)+""+LSet$(players\blue,3))
+						WriteString(stream,LSet$(currentPlayerType,3))
 					EndIf
 				Next
-				;players.player=First player
 				WriteString(stream,"End")
+				WriteString(stream,LSet$(red,3)+""+LSet$(green,3)+""+LSet$(blue,3))
 				SendUDPMsg stream,UDPMsgIP(stream),2201
 				For players.player=Each player
 					If players\ip<>UDPMsgIP(stream) And players\username<>"HostUserName"
@@ -95,28 +96,8 @@ Function checkmessages(stream)
 		EndIf
 		
 		If typeofmsg="005"
-		;Make myself a player
-			player.player=New player
-			player\username="AngelOnFira"
-			player\ip=myip("IIP")
-			player\port=2201
-			player\cube=CreateCube()
-			ScaleEntity player\cube,.99,.99,1.01
-			
-			clientcamera=CreateCamera(player\cube)
-			PositionEntity clientcamera,0,-20,-15
-			RotateEntity clientcamera,-70,0,0
-		;Get my colour	
-			textread$=ReadString(stream)
-			For player.player=Each player
-				If player\username=myusername
-					player\red=Mid(textread,1,3)
-					player\green=Mid(textread,4,3)
-					player\blue=Mid(textread,7,3)
-					EntityColor player\cube,player\red,player\green,player\blue
-				EndIf
-			Next
 		;Get all other players info
+		;Stop
 			Repeat
 				textread$=ReadString(stream)
 				If textread<>"End"
@@ -141,9 +122,36 @@ Function checkmessages(stream)
 					newplayer\green=Mid(textread,4,3)
 					newplayer\blue=Mid(textread,7,3)
 					EntityColor newplayer\cube,newplayer\red,newplayer\green,newplayer\blue
+					
+					textread$=ReadString(stream)
+					newplayer\collisionType=Trim(Mid(textread,1,3))
 				EndIf
 			Until textread="End"
-		;Delete hosts
+			
+			;Make myself a player
+			player.player=New player
+			player\username="AngelOnFira"
+			player\ip=myip("IIP")
+			player\port=2201
+			player\cube=CreateCube()
+			ScaleEntity player\cube,.99,.99,1.01
+			
+			clientcamera=CreateCamera(player\cube)
+			PositionEntity clientcamera,0,-20,-15
+			RotateEntity clientcamera,-70,0,0
+			
+			;Get my colour	
+			textread$=ReadString(stream)
+			For player.player=Each player
+				If player\username=myusername
+					player\red=Mid(textread,1,3)
+					player\green=Mid(textread,4,3)
+					player\blue=Mid(textread,7,3)
+					EntityColor player\cube,player\red,player\green,player\blue
+				EndIf
+			Next
+			
+			;Delete hosts
 			For hosts.host=Each host
 				If hosts\ip<>UDPMsgIP(stream)
 					FreeEntity hosts\cube
@@ -229,7 +237,7 @@ Function checkmessages(stream)
 			;Send the info to each player	
 			For playersend.player=Each player
 				If playersend\ip<>UDPMsgIP(stream) And playersend\port<>2200
-					WriteString(stream,"001"+Mid(readstringstream,3,4))
+					WriteString(stream,"012"+Mid(readstringstream,3,4))
 					WriteString(stream,UDPMsgIP(stream))
 					SendUDPMsg(stream,playersend\ip,playersend\port)
 				EndIf
@@ -246,19 +254,19 @@ Function checkmessages(stream)
 			Next
 		EndIf
 		
-		;Player leave?
+		;Player has said that he is leaving, send info to other players
 		If typeofmsg="010"
 			For players.player=Each player
 				If players\port=UDPMsgPort(stream)
 					For player.player=Each player
 						If player\username<>players\username
-							WriteString(stream,"003"+player\username)
+							WriteString(stream,"014"+player\username)
 							SendUDPMsg(stream,player\ip,player\port)
 						EndIf
 					Next
-				EndIf
 				FreeEntity players\cube
 				Delete players
+				EndIf
 			Next
 		EndIf
 		
@@ -311,10 +319,12 @@ Function checkmessages(stream)
 				hosts\lastrecieve=MilliSecs()
 			EndIf
 			
-			;Delete a player?
+			;Delete another player that has left
 			If typeofmsg="014"
 				For player.player=Each player
-					If player\ip=Mid(readstringstream,4,Len(readstringstream)-3)
+					If player\username=Mid(readstringstream,4,Len(readstringstream)-3)
+						DebugLog player\username
+						Stop
 						FreeEntity player\cube
 						Delete player
 					EndIf
@@ -332,16 +342,17 @@ Function checkmessages(stream)
 				Next
 			EndIf
 			
+			;Setup game for client
 			If typeofmsg="016"
 				findmapdistance=True
 				For player.player=Each player
+					;Start hiding map from player at center
 					If player\username=myusername
 						hideoriginx=EntityX(player\cube)
 						hideoriginy=EntityY(player\cube)
 					EndIf
 				Next
 				programlocation="maingamesetup"
-				maingamesetup()
 			EndIf
 	Wend
 End Function

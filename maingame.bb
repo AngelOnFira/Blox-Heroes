@@ -6,6 +6,7 @@ Function maingamesetup()
 		;		player\cube=CreateCube()
 		;	Next
 		
+		;If we are still hiding the map
 		If preparemap=False
 			If nowshowmap=False
 				If hidemap()
@@ -17,15 +18,30 @@ Function maingamesetup()
 				If revealmap() Then preparemap=True
 				;Stop
 			EndIf
+		;Otherwise go to the main game loop
 		Else
 			programlocation="maingame"
+			i=0
+			For player.player = Each player
+				EntityType player\cube, player\collisionType
+				i=i+1
+			Next
+			
+			For j=0 To i-1
+				For k=j+1 To i
+					Collisions j, k, 3, 2
+				Next
+			Next
+			Return
 		EndIf
 		
+		;If it's a host
 		If usertype="host"
 			If startclockmillisecs=0
 				startclockmillisecs=MilliSecs()
 			EndIf
 			
+			;Sync timer?
 			For player.player=Each player
 				;If player\username<>myusername
 					WriteString(lanstream,"001"+(MilliSecs()-startclockmillisecs))
@@ -34,19 +50,16 @@ Function maingamesetup()
 			Next
 		EndIf
 		
+		;Update sync timer?
 		While RecvUDPMsg(lanstream)
 			readstringstream$=ReadString(lanstream)
 			typeofmsg$=Mid$(readstringstream,1,3)
 			
 			If typeofmsg="001"
 				startclockmillisecs=Mid$(2,Len(readstringstream)-3)
-				;DebugLog readstringstream
-				;DebugLog startclockmillisecs
 			EndIf
 			
-		Wend
-	;EndIf
-	
+		Wend	
 	UpdateWorld()
 	RenderWorld()
 	
@@ -55,8 +68,10 @@ End Function
 		
 
 Function maingame()
+	Cls
 	maingamemessages()
 	maingameinputs()
+	UpdateWorld
 	maingamecollisions()
 	maingame3d()
 	maingamehud()
@@ -65,14 +80,21 @@ Function maingame()
 End Function
 
 Function maingamemessages()
+	checkmessages(lanstream)
 End Function
 
 Function maingamecollisions()
+	For player.player = Each player
+		For player2.player = Each player
+			If EntityCollided(player\cube,player\collisionType) = player2\collisionType
+				Text 0,0, "collision"
+			EndIf
+		Next
+	Next
 End Function
 
 Function maingame3d()
-UpdateWorld
-RenderWorld
+	RenderWorld
 End Function
 
 Function maingamehud()

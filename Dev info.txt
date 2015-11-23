@@ -108,3 +108,21 @@ Main loop()
 -Fixed chat boxes and messages that were pointing to wrong places
 -Fixed when host started game in lobby
 -Need to still add send movement and stuff ingame, make game rules
+
+-Added more comments and fixed more messages
+-Issues when player leaves, he is not properly deleted. Will need to add more test players.
+-Fixed more message pointers
+
+11/22/2015;
+-Noooooo not serverside logic
+-Fixed and commented the maingame setup
+-Worked on collisions between players in main game
+-Fixed collision information in runClientLanMenu
+
+11/23/2015;
+-Commented some code in functions
+-Added collision type field to player
+-Fixed sending player information
+-Added collisions between every player when the game has started
+-Players not registering collision
+-Issue with player location when starting game, it dosen't send some movement data.

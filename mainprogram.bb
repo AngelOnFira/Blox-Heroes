@@ -90,6 +90,7 @@ Type player
 	Field x,y,z,rotation,cube
 	Field lastcheck,lastrecieve
 	Field red,green,blue
+	Field collisionType
 	;Field (STATES)
 End Type
 
@@ -99,7 +100,7 @@ Type host
 	Field lastcheck, lastrecieve, ping, numpings, averagepings[20], averageping
 End Type
 
-Global lanplayersearchcube
+Global lanplayersearchcube, currentPlayerType
 
 ;-------:
 ;Typeing;

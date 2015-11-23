@@ -1,3 +1,4 @@
+;Setup the graphics
 Function setgraphics()
 	graphicsfile=OpenFile("System/Settings.blx")
 	
@@ -45,6 +46,7 @@ Function setgraphics()
 
 End Function
 
+;Find the graphics config file
 Function checkfolders()
 	
 	thisdir=ReadDir(CurrentDir())
@@ -60,6 +62,7 @@ Function checkfolders()
 	Forever
 End Function
 
+;Function to initialize game
 Function initialize()
 	setgraphics()
 	readplayerinfo()
@@ -68,6 +71,7 @@ Function initialize()
 	loadsounds()
 End Function
 
+;Read the saved player info
 Function readplayerinfo()
 	playerinfofile=OpenFile("System/playerinfo.txt")
 	If playerinfofile=0
@@ -79,16 +83,9 @@ Function readplayerinfo()
 	
 	crap=ReadLine(playerinfofile)
 	username=ReadLine(playerinfofile)
-End Function
-
-;Function encryptpassword(password)
-;	num1=
-;	num2=
-;	num3=
-;	num4=
+End Function	
 	
-	
-
+;Load logo and other pics
 Function loadgamevitals()
 	imagebutton=LoadImage("Media/button.png")
 	MaskImage imagebutton,0,255,0
@@ -100,16 +97,17 @@ Function loadgamevitals()
 	textfont=LoadFont("Arial",24)
 End Function
 
+;Setup the light for 3D
 Function load3dworld()
-	light=createlight()
-	
-	;universalcube=createcube()
+	light=CreateLight()
 End Function
 
+;Load sounds for the game
 Function loadsounds()
 
 End Function
 
+;Start the main menu
 Function mainmenu()
 	SetFont textfont
 	Cls
@@ -123,6 +121,7 @@ Function mainmenu()
 	Flip
 End Function
 
+;Draw the menu
 Function drawmainmenu()
 	DrawImage imagebutton,programwidth/15,programheight/20
 	DrawImage imagebutton,programwidth/15,programheight/8.57
@@ -140,6 +139,7 @@ Function drawmainmenu()
 
 End Function
 
+;Check for inputs in the menu
 Function checkinputsmainmenu()
 	If MouseHit(1)
 		x=MouseX()
@@ -171,7 +171,7 @@ Function checkinputsmainmenu()
 	
 	If KeyHit(3);2
 		showmap=True
-		programlocation="runclientlanmenu"
+		setupLanSearch()
 		usertype="client"
 		myusername="AngelOnFira"
 		startnetwork()
@@ -180,6 +180,7 @@ Function checkinputsmainmenu()
 	If KeyHit(1) Then End
 End Function
 
+;Second menu, start menu
 Function startmenu()
 		Cls
 		drawstartmenu()
@@ -188,6 +189,7 @@ Function startmenu()
 		Flip
 End Function
 
+;Draw the start menu
 Function drawstartmenu()
 	DrawImage imagebutton,programwidth/15,programheight/20
 	DrawImage imagebutton,programwidth/15,programheight/8.57
@@ -205,40 +207,48 @@ Function drawstartmenu()
 	Text programwidth/3.94,programheight/2.93,"Back",1,1
 End Function
 
+;Check for inputs in the start menu
 Function checkinputsstartmenu()
 	If MouseHit(1)
 		x=MouseX()
 		y=MouseY()
 		
+		;Go back to the start menu?
 		If x>53 And x<353 And y>30 And y<60
 			startmenu()
 		EndIf
 		
+		;Nothing yet
 		If x>53 And x<353 And y>70 And y<100
 			
 		EndIf
 		
+		;Search for lan game
 		If x>53 And x<353 And y>110 And y<140
-			programlocation="runclientlanmenu"
+			setupLanSearch()
 			usertype="client"
 			myusername="AngelOnFira"
 			startnetwork()
 		EndIf
 		
+		;Host a game
 		If x>53 And x<353 And y>150 And y<180
 			programlocation="hostmenu"
 		EndIf
-
+		
+		;Return to the main menu
 		If x>53 And x<353 And y>190 And y<220
 			programlocation="mainmenu"
 		EndIf
 	EndIf
 	
+	;Esc goes to main menu
 	If KeyHit(1)
 		programlocation="mainmenu"
 	EndIf
 End Function
 
+;Settings menu
 Function settings()
 	readsettings()
 	Cls
@@ -247,6 +257,7 @@ Function settings()
 	Flip
 End Function
 
+;Scalable settings menu
 Function drawsettingmenu()
 	ScaleImage imagebutton,1,2
 	DrawImage imagebutton,programwidth/15,programheight/2
@@ -398,6 +409,8 @@ Function runhostlanmenu()
 	PositionEntity player\cube,11,11,0
 	myusername="HostUserName"
 	playercolour(myusername)
+	player\collisionType=0
+	currentPlayerType=1
 	
 	hostcamera=CreateCamera(player\cube)
 	PositionEntity hostcamera,0,-20,-15
@@ -468,14 +481,12 @@ Function drawlansearch()
 		If hosts\lastmove=0 Then hosts\lastmove=hosts\averageping
 		
 		movehowfar=(hosts\averageping-hosts\lastmove)
-		;DebugLog movehowfar
 		If movehowfar<1000
 			MoveEntity hosts\cube,0,movehowfar,0
 		EndIf
 		hosts\lastmove=hosts\averageping
 	Next
-	
-	Collisions 2,1,3,2
+
 	UpdateWorld()
 	
 	If EntityCollided(lansearchplayercube,1)
@@ -719,31 +730,35 @@ Function checkinputslobby()
 	EndIf
 		
 	If KeyHit(1)
+		;Leaving the game
 		If usertype="client"
+			;Delete the map
 			For map.map=Each map
 				FreeEntity map\cube
 				Delete map
 			Next
+			
+			;Tell the server that you are leaving
 			WriteString(lanstream,"010")
 			hosts.host=First host
 			SendUDPMsg lanstream,hosts\ip,hosts\port
 			
+			;Delete the host
+			Stop
 			For hosts.host=Each host
-				FreeEntity hosts\cube
 				Delete hosts
 			Next
 			
+			;Delete each other player
 			For player.player=Each player
-				FreeEntity player\cube
 				Delete player
 			Next
 			
+			;Clean up
 			CloseUDPStream(lanstream)
 			usertype=""
 			myusername=""
-			lastradar=0
-			FreeEntity lansearchplayercube
-			programlocation="runclientlanmenu"
+			setupLanSearch()
 		EndIf
 		
 		If usertype="host"
@@ -780,7 +795,7 @@ Function lobbychecks()
 		Next
 		
 		CloseUDPStream lanstream
-		programlocation="runclientlanmenu"
+		setupLanSearch()
 	EndIf
 End Function
 
@@ -1016,5 +1031,10 @@ Function masterFPSCounter()
 	EndIf
 	Color 255,255,255
 	Text 100,100,FPSAmount
+End Function
+
+Function setupLanSearch()
+	Collisions 2,1,3,2
+	programlocation="runclientlanmenu"
 End Function
 	
