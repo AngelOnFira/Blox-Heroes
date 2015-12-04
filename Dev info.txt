@@ -126,3 +126,37 @@ Main loop()
 -Added collisions between every player when the game has started
 -Players not registering collision
 -Issue with player location when starting game, it dosen't send some movement data.
+
+11/25/2015;
+-Trying to give players all the same collision type, and then just checking what
+entity collided with what
+-Collisions between players working, but something funny with text
+-Good to start adding game rules
+
+11/29/2015;
+-Working on connecting between computers
+
+11/30/2015;
+-Looking at serverside collision detection
+-Sending to message 17 properly, but it is not sending the right collision names
+
+-Players now hitting each other and reseting
+-Redesigning old map editor
+-New Blitz editor!!
+
+12/02/2015;
+-Redesigning map editor
+-Working on array for map, and displaying the grid
+
+-Fixing a better grid, look into how to resize if user wants, base off point of origin?
+-Cleaned up map edit code
+-Output maps as better file and add spawn locations
+-Impliment it into main game
+
+12/03/2015;
+-Fixed grid, made each box a variable size
+-Need to register clicking on a box and filling it
+-Redesigned the grid around coordinates rather then center
+-Need to fix e and w variables
+-Fixing reading where the mouse is hitting
+-Grid is now drawing, registering clicks, and drawing filled spots properly

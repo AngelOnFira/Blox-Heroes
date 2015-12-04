@@ -76,7 +76,7 @@ Repeat
 	ElseIf programlocation="maingame"
 		maingame()
 	EndIf
-
+	
 Forever
 
 ;setupgame()
@@ -113,6 +113,10 @@ Global typingmessage$,typingprogress
 
 Type map
 	Field cube,x,y,unittype
+	Field spawnNum,dimx,dimy
+End Type
+
+Type spawn
 	Field dimx,dimy
 End Type
 
@@ -139,3 +143,5 @@ Global nowshowmap, preparemap
 	;1-Wall
 	;2-Player
 	;3-Special
+;~IDEal Editor Parameters:
+;~C#Blitz3D

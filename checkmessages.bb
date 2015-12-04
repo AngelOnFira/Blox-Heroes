@@ -273,9 +273,9 @@ Function checkmessages(stream)
 		;Server gets a message and sends it to each player
 		If typeofmsg="011"
 			For player.player=Each player
-				;If the player is not myself or the person who sent it
+			;If the player is not myself or the person who sent it
 				If player\ip<>UDPMsgIP(stream) And player\username<>myusername
-					;Send out the message
+				;Send out the message
 					WriteString(stream,"015"+LSet(player\ip,11)+""+Mid$(readstringstream,4,Len(readstringstream)-4))
 					SendUDPMsg stream,player\ip,player\port					
 				EndIf
@@ -354,5 +354,20 @@ Function checkmessages(stream)
 				Next
 				programlocation="maingamesetup"
 			EndIf
+			
+			;Collision message from server
+			If typeofmsg="017"
+				playerOne$=Trim(Mid(readstringstream,4,30))
+				playerTwo$=Trim(Mid(readstringstream,34,30))
+				For player.player = Each player
+					If player\username = playerOne
+						PositionEntity player\cube,Rnd(-10,10),Rnd(-10,10),0
+					ElseIf player\username = playerTwo
+						PositionEntity player\cube,Rnd(-10,10),Rnd(-10,10),0
+					EndIf
+				Next
+			EndIf
 	Wend
 End Function
+;~IDEal Editor Parameters:
+;~C#Blitz3D

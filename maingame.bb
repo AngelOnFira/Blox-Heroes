@@ -23,15 +23,20 @@ Function maingamesetup()
 			programlocation="maingame"
 			i=0
 			For player.player = Each player
-				EntityType player\cube, player\collisionType
-				i=i+1
+				EntityType player\cube, 2;player\collisionType
+				;i=i+1
 			Next
 			
-			For j=0 To i-1
-				For k=j+1 To i
-					Collisions j, k, 3, 2
-				Next
-			Next
+			;For j=0 To i-1
+			;	For k=j+1 To i
+			;		DebugLog "i; "+i+", j; "+j+", k; "+k
+			;		Collisions j, k, 3, 2
+			;	Next
+			;Next
+			
+			;Stop
+			ClearCollisions
+			Collisions 2,2,3,2
 			Return
 		EndIf
 		
@@ -72,8 +77,9 @@ Function maingame()
 	maingamemessages()
 	maingameinputs()
 	UpdateWorld
+	RenderWorld
 	maingamecollisions()
-	maingame3d()
+	;maingame3d()
 	maingamehud()
 	
 	Flip
@@ -84,13 +90,22 @@ Function maingamemessages()
 End Function
 
 Function maingamecollisions()
-	For player.player = Each player
-		For player2.player = Each player
-			If EntityCollided(player\cube,player\collisionType) = player2\collisionType
-				Text 0,0, "collision"
+	If usertype="host"
+		For playerOne.player = Each player
+			entityCollision=EntityCollided(playerOne\cube, 2)
+			If entityCollision
+				For playerTwo.player = Each player
+					If playerTwo\cube=entityCollision; And playerOne\username<>playerTwo\username
+						For playerInfo.player = Each player
+							WriteString(lanstream,"017"+LSet$(playerOne\username,30)+""+LSet$(playerTwo\username,30))
+							SendUDPMsg(lanstream,playerInfo\ip,playerInfo\port)
+						Next
+						;Text 0,0, "Collided with player "+player\username
+					EndIf
+				Next
 			EndIf
 		Next
-	Next
+	EndIf
 End Function
 
 Function maingame3d()
