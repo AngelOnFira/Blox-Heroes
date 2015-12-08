@@ -1,408 +1,130 @@
 Graphics3D 800,600,16,2
 SetBuffer BackBuffer()
 
-Global fileout,w,ao#,e,save,bsave,dsave,as,blocko,tex,block,cam,grid,boxsize, xCenter, yCenter
+Global fileout,ao#,save,bsave,dsave,as,blocko,tex,block,cam,grid,boxsize, xCenter, yCenter
 
 cam=CreateCamera()
 light=CreateLight()
 blocko=CreateCube()
 tex=LoadTexture("Media/mark.png")
 
-Type block
-	Field blockhandle
-	Field picked
-	Field fcx
-	Field fcy
-End Type
 
 Type save
 	Field bsave
 	Field csave
 End Type
 
-boxSize=30
+Type selectBox
+	Field selected, title$
+	Field r,g,b
+	Field x,y,xLen
+End Type
+
+Type textBox
+	Field inputString$, title$, selected
+	Field x,y
+End Type
+
+boxsize=30
 xCenter=400
 yCenter=300
 
 mapStart()
-Dim blocksArray(Abs(e),Abs(w))
+Dim blocksArray(100,100)
 DebugLog e+","+w
 mapMain()
+FlushKeys()
 mapSave()
+End
 
 Function mapStart()
-	Print "Press 'l' To load and 'n' For a new progect"
-	ye=ye+12
-	;Repeat
-	;	q=GetKey()
-	;Until q=108 Or q=110
+	newTextInput("x", 20, 50)
+	newTextInput("y", 20, 100)
+	newBoxes("Show Border",20,200)
+	newBoxes("Add Spawn",20,230)
+	newBoxes("Save",20,260)
+	newBoxes("Show Border",20,290)
 	
-	q=110
-	If q=108
-		BHlvlfilen$=Input("What is the file name? (Do NOT include .BHME) ")
-		ye=ye+12
-		BHlvlfile=OpenFile("Maps/Map Editor/"+BHlvlfilen+".BHME")
-		If BHlvlfile=0
-			ye=ye+12
-			Locate 0,ye
-			Print "Error 1; File could not be found"
-			ye=ye+24
-			Delay 300
-			Locate 0,ye
-			mapStart()
-		EndIf
-		
-		If BHlvlfile<>0
-			SeekFile(BHlvlfile,1)
-			n#=ReadLine$(BHlvlfile)
-			x#=ReadLine$(BHlvlfile)
-			y#=ReadLine$(BHlvlfile)
-		EndIf
-		
-		If x=>0
-			x="-"+x+""
-		EndIf
-		w=x
-		e=y
-		If e=>0
-			e="-"+e+""
-		EndIf
-		
-		picd$=ReadLine$(BHlvlfile)
-		
-		num#=4
-		;Stop
-		;Repeat
-		;	theblock.block=New block
-		;	theblock\blockHandle=CopyEntity(blocko)
-		;	
-		;	picd$=ReadLine$(BHlvlfile)
-		;	
-		;	theblock\picked=picd
-		;	
-		;	If theblock\picked=1
-		;		EntityColor theblock\blockHandle,0,255,0
-		;	EndIf
-		;	
-		;	PositionEntity theblock\blockHandle,x,y,30
-		;	x=x+2
-		;	If x=Abs(w) And y<>e
-		;		x=w
-		;		y=y-2
-		;	EndIf
-		;	EntityTexture theblock\blockHandle,tex
-		;	EntityPickMode theblock\blockHandle,3
-		;Until x=w And y=e
-		
-	ElseIf q=110
-		;Repeat
-		;	x=Input("What is the X value? (Horizontal) ")
-		;Until x<>0
-		x=12
-		If x=>0
-			x="-"+x+""
-		EndIf
-		w=x
-		Repeat
-			;y=Input("What is the Y value? (Vertical) ")
-			y=12
-		Until y<>0
-		e=y
-		If e=>0
-			e="-"+e+""
-		EndIf
-		
-		Repeat
-			theblock.block=New block
-			theblock\blockHandle=CopyEntity(blocko)
-			theblock\picked=0
-			
-			If theblock\picked=1
-				EntityColor theblock\blockHandle,0,255,0
-			EndIf
-			
-			PositionEntity theblock\blockHandle,x,y,30
-			x=x+2
-			If x=Abs(w) And y<>e
-				x=w
-				y=y-2
-			EndIf
-			EntityTexture theblock\blockHandle,tex
-			EntityPickMode theblock\blockHandle,3
-			
-		Until x=w And y=e
-		Cls
-		
-		FreeEntity blocko
-	EndIf
 End Function
 
 Function mapMain()
+	Local gridX, gridY
 	While Not KeyHit(1)
 		Cls
 		
-		If KeyDown(30)
-			MoveEntity cam,0,0,1
-		EndIf
-		If KeyDown(44)
-			MoveEntity cam,0,0,-1
-		EndIf
-		If KeyDown(203)
-			MoveEntity cam,1,0,0
-		EndIf
-		If KeyDown(208)
-			MoveEntity cam,0,1,0
-		EndIf
-		If KeyDown(205)
-			MoveEntity cam,-1,0,0
-		EndIf
-		If KeyDown(200)
-			MoveEntity cam,0,-1,0
-		EndIf
-		
-		If MouseHit(1)
-			xMouse=(MouseX()-(xCenter-(Abs(e)/2*boxSize)))/boxSize
-			yMouse=(MouseY()-(yCenter-(Abs(w)/2*boxSize)))/boxSize
-			
-			If xMouse>=0 And xMouse<Abs(e) And yMouse>=0 And yMouse<Abs(w)
-				If blocksArray(xMouse, yMouse)=0
-					blocksArray(xMouse, yMouse)=1
-				Else
-					blocksArray(xMouse, yMouse)=0
-				EndIf
-			EndIf
-		EndIf
-		
-		
-		CameraPick(cam,MouseX(),MouseY())
-		For theblock.block=Each block
-			If PickedEntity()=theblock\blockHandle
-				If MouseHit(1)
-					If theblock\picked=0
-						theblock\picked=1
-					Else
-						EntityColor theblock\blockhandle,255,255,255
-						EntityTexture theblock\blockHandle,tex
-						theblock\picked=0
-					EndIf
-				EndIf
-			EndIf
-		Next
-		
-		For theblock.block=Each block
-			If theblock\picked=1
-				EntityColor theblock\blockHandle,0,255,0
-			ElseIf theblock\picked=0
-				EntityColor theblock\blockhandle,255,255,255
-				EntityTexture theblock\blockHandle,tex
-			EndIf
-		Next
-		
-		UpdateWorld
-		;RenderWorld
 		Color 255,255,0
-		If PickedEntity()>1
-			Text 0,0,""+Int(EntityX(PickedEntity()))+","+Int(EntityY(PickedEntity()))+""
+		
+		;Text 0,100, (MouseX()-(xCenter-(Abs(e)/2*boxsize)))/boxsize
+		;Text 0,112, (MouseY()-(yCenter-(Abs(w)/2*boxsize)))/boxsize
+		;Text 0,130, MouseX()+", "+xCenter+", "+x+", "+boxsize
+		
+		For thisBox.textBox = Each textBox
+			If thisBox\title="x"
+				lessThan(thisBox, 100)
+				gridX=thisBox\inputString
+			Else If thisBox\title="y"
+				lessThan(thisBox, 100)
+				gridY=thisBox\inputString
+			EndIf
+			
+			drawGrid(gridX, gridY, xCenter, yCenter)
+		Next
+		
+		checkMapMainInputs(gridX, gridY)
+		drawMapMain()
+		drawTextInput()
+		
+		If boxSelected("Save")
+			deleteSelectBox()
+			newTextInput("What do you want to call this file?", 100, 100)
+			mapSave()
 		EndIf
 		
-		Text 0,100, (MouseX()-(xCenter-(Abs(e)/2*boxSize)))/boxSize
-		Text 0,112, (MouseY()-(yCenter-(Abs(w)/2*boxSize)))/boxSize
-		Text 0,130, MouseX()+", "+xCenter+", "+x+", "+boxSize
-		
-		drawGrid(w,e, xCenter, yCenter)
-		
-		
-		Text 0,60, MouseX()*10/GraphicsWidth()+", "+MouseX()
-		Text 0,72, MouseY()*10/GraphicsHeight()+", "+MouseY()
-		
-		Text 0,12,"Press esc to save"
 		Color 255,255,255
 		Flip
 	Wend
 End Function
 
-Cls
-Flip
-
-Locate 0,0
-
 Function mapSave()
 	Repeat
-		Border=Input$("Do you want to the program to auto add a border? (1 for yes, 2 for no) ")
-		If Border="1"
-			blocko=CreateCube()
-			absw=Abs(w)
-			abse=Abs(e)
-			ab1sw=absw*(-1)-2
-			ab1se=abse*(-1)
-			abse=abse+2
-			absw=absw-2
-			
-			Repeat
-				Border(ab1sw,abse)
-				abse=abse-2
-			Until abse=ab1se-2
-			
-			abse=Abs(e)+2
-			absw=Abs(w)
-			ab1sw=absw*(-1)
-			ab1se=abse*(-1)
-			
-			Repeat
-				Border(absw,abse)
-				abse=abse-2
-			Until abse=ab1se
-			
-			abse=Abs(e)+2
-			absw=Abs(w)
-			ab1sw=absw*(-1)
-			ab1se=abse*(-1)
-			
-			Repeat
-				Border(ab1sw,abse)
-				ab1sw=ab1sw+1
-			Until ab1sw=absw
-			
-			abse=Abs(e)
-			absw=Abs(w)
-			ab1sw=absw*(-1)
-			ab1se=abse*(-1)
-			
-			Repeat
-				Border(ab1sw,ab1se)
-				ab1sw=ab1sw+2
-			Until ab1sw=absw
-			
-		EndIf
-		
-	Until Border="1" Or Border="2"
-	
-	Cls
-	
-	Locate 0,0
-	Repeat
-		in$=Input$("What do you want to call this file? ")
-		test=OpenFile("Maps/Blox Heros/"+in+".BHlvl")
-		test2=OpenFile("Maps/Map Editor/"+in+".BHME")
-		If test<>0 Or test2<>0
-			Print "There is already a file with that name. (Press 1 to overwrite, and 2 to re-name)"
-			FlushKeys
-			ctr=0
-			While Not ctr=49 Or ctr=50
-				ctr=GetKey()
-			Wend
-		EndIf
-	Until ctr<>50
-	Print "Press 1 to save as .BHME, 2 to export it as .BHlvl, and 3 if you need to know the difference "
-	Repeat
-		dr$=WaitKey()
-	Until dr$=49 Or dr$=50 Or dr$=51
-	If dr=49
-		fileout=WriteFile("Maps/Map Editor/"+in$+".BHME")
-		
-		save()
-		
-		WriteLine(fileout,""+as+"")
-		
-		Locate 0,36
-		dt=36
-		
 		Cls
-		For theblock.block=Each block
-			Text 0,0,"Saving..."
-			If theblock\picked=1
-				WriteLine(fileout,"1")
-			ElseIf theblock\picked=0
-				WriteLine(fileout,"0")
+		
+		drawTextInput()
+		Flip
+		
+		If checkInputsSaveMenu()
+			this.textBox = First textBox
+			testLvlFile=OpenFile("Maps/Blox Heros/"+this\inputString+".BHlvl")
+			testEditorFile=OpenFile("Maps/Map Editor/"+this\inputString+".BHME")
+			If testLvlFile<>0 Or testEditorFile<>0
+				Print "There is already a file with that name. (Press 1 to overwrite, and 2 to re-name)"
+				FlushKeys
+				ctr=0
+				While Not ctr=49 Or ctr=50
+					ctr=GetKey()
+				Wend
 			EndIf
-		Next
-		Cls
-		Locate 0,0
-		Print "...Saved"
-		While Not KeyHit(1)
-			Text 0,12,"Press esc to close"
-		Wend
-		
-		CloseFile(fileout)
-	EndIf
-	
-	If dr=50
-		fileout=WriteFile("Maps/Blox Heros/"+in$+".BHlvl")
-		save()
-		
-		as=as-1
-		WriteLine(fileout,""+as+"")
-		
-		Cls
-		
-		
-		yy=24
-		
-		Cls
-		Locate 0,0
-		Print "...Saved"
-		While Not KeyHit(1)
-			Text 0,12,"Press esc to close"
-		Wend
-		
-		CloseFile(fileout)
-	EndIf
-	
-	If dr=51
-		FlushKeys
-		Print "..."
-		Print "Pick the save option if you want to re-edit the map again."
-		Print "This can only be opened with the map editor. If you wanted to"
-		Print "Play it with Blox heros, you would choose to export it."
-		Print "Press enter to contiue"
-		Print "..."
-		While Not KeyHit(28)
-			Flip
-		Wend
-		Cls
-		Text 0,0,"What do you want to call this file? "+in+""
-		Locate 0,12
-	EndIf
+			
+			fileout=WriteFile("Maps/Map Editor/"+this\inputString+".BHlvl")
+			
+			For i = 1 To Abs(gridX)
+				currentLine$=""
+				For j = 1 To Abs(w)
+					currentLine=currentLine+""+blocksArray(i, j)
+				Next
+				DebugLog currentLine
+				WriteLine(fileout, currentLine)
+			Next
+			CloseFile(fileout)
+			Exit
+		EndIf
+	Forever
 End Function
 
 Function save()
-	Cls
-	WriteLine(fileout,"This is the savefile of your map.") 
-	WriteLine(fileout,""+Abs(w)+"")
-	WriteLine(fileout,""+Abs(e)+"")
-	
-	For theblock.block=Each block
-		Text 0,0,"Saving..."
-		If theblock\picked=1
-			theblock\fcx=EntityX(theblock\blockHandle)
-			theblock\fcy=EntityY(theblock\blockHandle)
-			as=as+1
-			d.save=New save
-			d\bsave=theblock\fcx
-			d\csave=theblock\fcy
-		EndIf
-	Next
-	
-	For d.save=Each save
-		WriteLine(fileout,""+d\bsave+"")
-		WriteLine(fileout,""+d\csave+"")
-		Text 0,0,"Saving...
-	Next
 End Function
 
 Function Border(abswp,absep)
-	theblock.block=New block
-	theblock\blockHandle=CopyEntity(blocko)
-	theblock\picked=1
-	
-	If theblock\picked=1
-		EntityColor theblock\blockHandle,0,255,0
-	EndIf
-	
-	PositionEntity theblock\blockHandle,abswp,absep,30
-	EntityTexture theblock\blockHandle,tex
-	EntityPickMode theblock\blockHandle,3
-	Cls
 End Function
 
 Function drawGrid(x#, y#, centerX, centerY)
@@ -411,11 +133,11 @@ Function drawGrid(x#, y#, centerX, centerY)
 	Color 255,255,255
 
 	For i=1 To x+1
-		Line centerX+(x/2*boxSize)-((i-1)*boxSize), centerY-(y/2*boxSize), centerX+(x/2*boxSize)-((i-1)*boxSize), centerY+(y/2*boxSize)
+		Line centerX+(x/2*boxsize)-((i-1)*boxsize), centerY-(y/2*boxsize), centerX+(x/2*boxsize)-((i-1)*boxsize), centerY+(y/2*boxsize)
 	Next
 	
 	For i=1 To y+1
-		Line centerX-(x/2*boxSize), centerY+(y/2*boxSize)-((i-1)*boxSize), centerX+(x/2*boxSize), centerY+(y/2*boxSize)-((i-1)*boxSize)
+		Line centerX-(x/2*boxsize), centerY+(y/2*boxsize)-((i-1)*boxsize), centerX+(x/2*boxsize), centerY+(y/2*boxsize)-((i-1)*boxsize)
 	Next
 	
 		
@@ -429,12 +151,200 @@ Function drawGrid(x#, y#, centerX, centerY)
 		For j = 0 To y
 			If blocksArray(i,j)=1
 				Color 0,255,0
-				Rect centerX-(x/2*boxSize)+(i*boxSize), centerY-(y/2*boxSize)+(j*boxSize), boxSize, boxSize, 1
-				Color 255,255,255
+			ElseIf blocksArray(i,j)=2
+				Color 255,0,0
 			EndIf
+			
+			If blocksArray(i,j)<>0
+				Rect centerX-(x/2*boxsize)+(i*boxsize), centerY-(y/2*boxsize)+(j*boxsize), boxsize, boxsize, 1
+			EndIf
+			Color 255,255,255
 		Next
 	Next
 	
+End Function
+
+Function checkMapMainInputs(gridX, gridY)
+	If MouseHit(1)
+		
+		;Check and see if each box was selection box has been chosen
+		For boxes.selectBox = Each selectBox
+			If MouseX()>=boxes\x And MouseX()<(boxes\x+boxes\xLen) And MouseY()>=boxes\y And MouseY()<(boxes\y+20)
+				If boxes\selected=0
+					
+					For resetBoxes.selectBox = Each selectBox
+						resetBoxes\selected=0
+						resetBoxes\r=255
+						resetBoxes\g=255
+						resetBoxes\b=255
+					Next
+					
+					boxes\selected=1
+					boxes\r=255
+					boxes\g=255
+					boxes\b=0
+				Else
+					boxes\selected=0
+					boxes\r=255
+					boxes\g=255
+					boxes\b=255
+				EndIf
+			EndIf
+		Next
+		
+		;Check textBoxes
+		
+		For textBoxes.textBox = Each textBox
+			If MouseX()>=textBoxes\x And MouseX()<(textBoxes\x+10+(Len(textBoxes\inputString)*8)) And MouseY()>=(textBoxes\y+19) And MouseY()<(textBoxes\y+39)
+				If textBoxes\selected=0
+					
+					For resettextBoxes.textBox = Each textBox
+						resettextBoxes\selected=0
+					Next
+					textBoxes\selected=1
+				Else
+					textBoxes\selected=0
+				EndIf
+			EndIf
+		Next
+		
+		;Check to see what box on grid has been selected
+		xMouse=(MouseX()-(xCenter-(Abs(gridX)/2*boxsize)))/boxsize
+		yMouse=(MouseY()-(yCenter-(Abs(gridY)/2*boxsize)))/boxsize
+		
+		If xMouse>=0 And xMouse<Abs(gridX) And yMouse>=0 And yMouse<Abs(gridY)
+			If blocksArray(xMouse, yMouse)<>0 And boxSelected("Add Spawn")=False Or blocksArray(xMouse, yMouse)=2
+				blocksArray(xMouse, yMouse)=0
+			Else
+				If boxSelected("Add Spawn")
+					blocksArray(xMouse, yMouse)=2
+				Else
+					blocksArray(xMouse, yMouse)=1
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+	
+	;Check and see if anything was typed
+	Repeat
+		key=GetKey()
+		If key
+			For thisBox.textBox = Each textBox
+				If thisBox\selected=1
+					If key = 8
+						thisBox\inputString=Mid(thisBox\inputString, 1, Len(thisBox\inputString)-1)
+					Else If key = 13
+						Return True
+					Else If key
+						thisBox\inputString=thisBox\inputString+""+Chr(key)
+					EndIf
+				EndIf
+			Next
+			
+			
+		EndIf
+	Until key=0
+End Function
+
+Function drawMapMain()
+	For boxes.selectBox = Each selectBox
+		drawBox(boxes)
+	Next
+End Function
+
+Function drawBox(boxes.selectBox)
+	Color boxes\r,boxes\g,boxes\b
+	
+	Rect boxes\x,boxes\y,boxes\xLen,20,0
+	Text boxes\x+5,boxes\y+4,boxes\title
+	
+	Color 255,255,255
+End Function
+
+Function newBoxes(title$, x, y)
+	boxes.selectBox = New selectBox
+	
+	boxes\title=title
+	boxes\x=x
+	boxes\y=y
+	boxes\xLen=10+(Len(title)*8)
+	boxes\r=255
+	boxes\g=255
+	boxes\b=255
+End Function
+
+Function boxSelected(title$)
+	For boxes.selectBox = Each selectBox
+		If boxes\title=title
+			If boxes\selected=1
+				Return True
+			Else
+				Return False
+			EndIf
+		EndIf
+	Next
+End Function
+
+Function newTextInput(title$, x, y)
+	boxes.textBox = New textBox
+	
+	boxes\title=title
+	boxes\inputString=""
+	boxes\x=x
+	boxes\y=y
+End Function
+
+Function deleteSelectBox()
+	For boxes.selectBox = Each selectBox
+		Delete boxes
+	Next
+End Function
+
+Function drawTextInput()
+	For box.textBox = Each textBox
+		Rect box\x,box\y+19,10+(Len(box\inputString)*8),20,0
+		If box\selected
+			Color 255,0,0
+		EndIf
+		
+		Text box\x+4,box\y+22,box\inputString
+		Text box\x-10,box\y+4,box\title
+		
+		Color 255,255,255
+	Next
+End Function
+
+Function checkInputsSaveMenu()
+	key=GetKey()
+	If key = 8
+		this.textBox = First textBox
+		this\inputString=Mid(this\inputString, 1, Len(this\inputString)-1)
+	Else If key = 13
+		Return True
+	Else If key
+		this.textBox = First textBox
+		this\inputString=this\inputString+""+Chr(key)
+	EndIf
+End Function
+
+Function lessThan(textBoxes.textBox, num)
+	If Len(textBoxes\inputString)>0
+		While Len(textBoxes\inputString)>0
+			If (Asc(Mid$(textBoxes\inputString, Len(textBoxes\inputString), 1))<48 Or Asc(Mid$(textBoxes\inputString, Len(textBoxes\inputString), 1))>57)
+				If Len(textBoxes\inputString)=1
+					textBoxes\inputString=""
+				Else
+					textBoxes\inputString=Mid(textBoxes\inputString,1,Len(textBoxes\inputString)-1)
+				EndIf
+			Else
+				Exit
+			EndIf
+		Wend
+		
+		While Int(textBoxes\inputString)>100
+			textBoxes\inputString=Mid(textBoxes\inputString,1,Len(textBoxes\inputString)-1)
+		Wend
+	EndIf
 End Function
 ;~IDEal Editor Parameters:
 ;~C#Blitz3D

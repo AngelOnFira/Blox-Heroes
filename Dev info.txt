@@ -160,3 +160,17 @@ entity collided with what
 -Need to fix e and w variables
 -Fixing reading where the mouse is hitting
 -Grid is now drawing, registering clicks, and drawing filled spots properly
+
+12/05/2015;
+-Removed all old 3D from map editor
+-Setting up text boxes for interaction with map editor
+-Textboxes are objects, and have all parameters set properly
+
+12/07/2015;
+-Worked on input boxes
+-Started working with saving the file
+-Text boxes not selecting
+
+12/08/2015;
+-Fixed text boxes, added input safety
+-Worked on making a dynamic grid
