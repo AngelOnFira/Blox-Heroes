@@ -402,6 +402,7 @@ End Function
 Function runhostlanmenu()
 	player.player=New player
 	player\username="HostUserName"
+	player\flag = True
 	player\ip=myip("IIP")
 	player\port=2200
 	player\cube=CreateCube()
@@ -416,7 +417,7 @@ Function runhostlanmenu()
 	PositionEntity hostcamera,0,-20,-15
 	RotateEntity hostcamera,-70,0,0
 	
-	hostmap="Testmap.txt"
+	hostmap="test.bhlvl"
 	loadmap(hostmap)
 	programlocation="lobby"
 	FlushKeys()
@@ -464,7 +465,7 @@ Function drawlansearch()
 		radarscale=1
 		lastradar=MilliSecs()
 		WriteString(lanstream,"002")
-		SendUDPMsg lanstream,IIPtoDIP(findhosts()),2200
+		SendUDPMsg lanstream,IIPtoDIP("172.17.73.16"),2200;IIPtoDIP(findhosts()),2200
 	ElseIf radar<>0
 		radarscale=(radarscale+.5)
 		ScaleEntity radar,radarscale,radarscale,radarscale
@@ -489,14 +490,14 @@ Function drawlansearch()
 
 	UpdateWorld()
 	
-	If EntityCollided(lansearchplayercube,1)
+	;If EntityCollided(lansearchplayercube,1)
 		For hosts.host=Each host
 			If hosts\cube=EntityCollided(lansearchplayercube,1)
 				WriteString(lanstream,"004"+LSet$(usernamebuffed,30))
 				SendUDPMsg lanstream,hosts\ip,hosts\port
 			EndIf
 		Next
-	EndIf
+	;EndIf
 	RenderWorld()
 	
 	Text 0,50, myip("DottedIP")
@@ -744,7 +745,6 @@ Function checkinputslobby()
 			SendUDPMsg lanstream,hosts\ip,hosts\port
 			
 			;Delete the host
-			Stop
 			For hosts.host=Each host
 				Delete hosts
 			Next
@@ -834,13 +834,13 @@ End Function
 
 Function myip$(typeip$)
 	hosts=CountHostIPs("")
-	myip=hostip(1)
+	myip=HostIP(1)
 	If typeip="IIP"
 		;Return the internal IP
-		return myip
+		Return myip
 	Else If typeip="DottedIP"
 		;Return the dotted IP
-		return dottedip$(myip)
+		Return DottedIP$(myip)
 	EndIf
 End Function
 
@@ -855,10 +855,11 @@ Function playerinfo()
 End Function
 
 Function loadmap(mapname$)
-	mapfile=OpenFile(mapname)
+	mapfile=OpenFile("maps\Blox Heros\"+mapname)
 	dimensions$=ReadLine(mapfile)
 	dimenx=Trim(Mid(dimensions,1,3))
 	dimeny=Trim(Mid(dimensions,3,3))
+	numOfSpawns=0
 	
 	For i=1 To dimeny
 		mapline$=ReadLine(mapfile)
@@ -871,8 +872,10 @@ Function loadmap(mapname$)
 				PositionEntity map\cube,j*2,i*2,0
 				EntityType map\cube,1
 			ElseIf Mid(mapline,j,1)=2
-				map.map=New map
-				map\unittype=2
+				newSpawn.spawn = New spawn
+				newSpawn\dimX=j*2
+				newSpawn\dimY=i*2
+				numOfSpawns=numOfSpawns+1
 			EndIf
 		Next
 	Next
@@ -1038,3 +1041,5 @@ Function setupLanSearch()
 	programlocation="runclientlanmenu"
 End Function
 	
+;~IDEal Editor Parameters:
+;~C#Blitz3D

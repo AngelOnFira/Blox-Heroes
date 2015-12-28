@@ -174,3 +174,39 @@ entity collided with what
 12/08/2015;
 -Fixed text boxes, added input safety
 -Worked on making a dynamic grid
+
+12/09/2015;
+-Map editor is working enough for spawn point, need to reintegrate into main program
+-Removed unneeded globals
+-Cleaned unneeded code
+-Commented all of the map editor code
+-Bug when you type a letter followed by a number in, it will only look at the number
+at the end. Maybe try checking string after everything has been entered.
+
+12/10/2015;
+-Map editor needs better run structure
+-Need to see why we can't find servers
+-Server is sending info to client when collision, not working
+-Type is returning null for some reason
+-Look into starting looking at the type again
+-Look into sending 017 twice
+
+12/23/2015;
+-Players now resetting properly
+-Need to add game rules
+
+12/24/2015;
+-Commenting main game code and cleaning up
+-Added temp flag to show current player
+-Flag not working
+-Some visual glitch when players touching
+-Flag partly working for server, not for client
+-Added code to start as soon as there are 2 debugs, may need fixing
+
+12/25/2015;
+-Player now lets host start with flag, it doesn't switch when tagged
+-Server needs to send updated player positions to keep everyone in check
+-Switches once every few times
+-Game checking collision for each player even if they have already been checked
+-Checking blocks against themselves?
+-Issue with stopping them from checking against each other

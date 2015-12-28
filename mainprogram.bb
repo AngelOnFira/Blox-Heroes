@@ -91,6 +91,7 @@ Type player
 	Field lastcheck,lastrecieve
 	Field red,green,blue
 	Field collisionType
+	Field flag
 	;Field (STATES)
 End Type
 
@@ -100,7 +101,7 @@ Type host
 	Field lastcheck, lastrecieve, ping, numpings, averagepings[20], averageping
 End Type
 
-Global lanplayersearchcube, currentPlayerType
+Global lanplayersearchcube, currentPlayerType, numOfSpawns
 
 ;-------:
 ;Typeing;
@@ -117,7 +118,7 @@ Type map
 End Type
 
 Type spawn
-	Field dimx,dimy
+	Field dimX,dimY
 End Type
 
 Global showmap,hidemap,findmapdistance

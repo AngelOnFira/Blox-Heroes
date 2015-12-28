@@ -1,12 +1,4 @@
-Function maingamesetup()
-	;If usertype="client"
-		
-		;If firsttimethrough=False
-		;	For player.player=Each player
-		;		player\cube=CreateCube()
-		;	Next
-		
-		;If we are still hiding the map
+Function maingamesetup()	
 		If preparemap=False
 			If nowshowmap=False
 				If hidemap()
@@ -23,16 +15,8 @@ Function maingamesetup()
 			programlocation="maingame"
 			i=0
 			For player.player = Each player
-				EntityType player\cube, 2;player\collisionType
-				;i=i+1
+				EntityType player\cube, 2
 			Next
-			
-			;For j=0 To i-1
-			;	For k=j+1 To i
-			;		DebugLog "i; "+i+", j; "+j+", k; "+k
-			;		Collisions j, k, 3, 2
-			;	Next
-			;Next
 			
 			;Stop
 			ClearCollisions
@@ -76,10 +60,9 @@ Function maingame()
 	Cls
 	maingamemessages()
 	maingameinputs()
-	UpdateWorld
-	RenderWorld
+	UpdateWorld()
 	maingamecollisions()
-	;maingame3d()
+	maingame3d()
 	maingamehud()
 	
 	Flip
@@ -91,24 +74,86 @@ End Function
 
 Function maingamecollisions()
 	If usertype="host"
+		;Check and see if each player has collided
+		
+		i=0
 		For playerOne.player = Each player
+			i=i+1
+		Next
+		
+		playerOne.player = First player
+		For j = 0 To i-1
 			entityCollision=EntityCollided(playerOne\cube, 2)
 			If entityCollision
-				For playerTwo.player = Each player
-					If playerTwo\cube=entityCollision; And playerOne\username<>playerTwo\username
-						For playerInfo.player = Each player
-							WriteString(lanstream,"017"+LSet$(playerOne\username,30)+""+LSet$(playerTwo\username,30))
-							SendUDPMsg(lanstream,playerInfo\ip,playerInfo\port)
-						Next
-						;Text 0,0, "Collided with player "+player\username
+				;Check if this was the player that he collided with
+				playerTwo.player = Last player
+				For k = j+1 To i
+					If playerTwo\cube=entityCollision
+						If playerOne\flag Or playerTwo\flag
+							random1=Rnd(1, numOfSpawns-1)
+							
+							random2=0
+						;Make sure random 2 isn't the same as random one
+							Repeat
+								random2=Rnd(1, numOfSpawns-1)
+							Until random2<>random1
+							
+						;Find the first spawn location
+							findSpawn1.spawn = First spawn
+							For i=1 To random1
+								findSpawn1 = After findSpawn1
+							Next
+							
+						;Find the second spawn location
+							findSpawn2.spawn = First spawn
+							For i=1 To random2
+								findSpawn2 = After findSpawn2
+							Next
+							
+						;Move the players on the hosts screen
+							For player.player = Each player
+								If player\username = playerOne\username
+									PositionEntity player\cube,findSpawn1\dimX,findSpawn1\dimY,0
+								ElseIf player\username = playerTwo\username
+									PositionEntity player\cube,findSpawn2\dimX,findSpawn2\dimY,0
+								EndIf
+							Next
+							
+							If playerOne\flag = True
+								playerOne\flag = False
+								playerTwo\flag = True
+							Else
+								playerTwo\flag = False
+								playerOne\flag = True
+							EndIf
+							
+						;Send the new player locations to other players
+							For playerInfo.player = Each player
+								If playerInfo\username<>myusername
+									WriteString(lanstream,"017"+LSet$(playerOne\username,30)+""+LSet$(playerTwo\username,30)+""+LSet$(random1, 3)+""+LSet$(random2, 3))
+									SendUDPMsg(lanstream,playerInfo\ip,playerInfo\port)
+								EndIf
+							Next
+						EndIf
 					EndIf
+					
+					playerTwo = Before playerTwo
 				Next
 			EndIf
+			
+			playerOne = After playerOne
 		Next
 	EndIf
 End Function
 
 Function maingame3d()
+	For player.player = Each player
+		If player\flag
+			EntityColor player\cube,255,0,0
+		Else
+			EntityColor player\cube,255,255,255
+		EndIf
+	Next
 	RenderWorld
 End Function
 
@@ -142,6 +187,7 @@ Function maingameinputs()
 			typingmessage=""
 		EndIf
 	Else
+		;Get movement info
 		currentkeycode=""
 		For player.player=Each player
 			If player\username=myusername
@@ -176,6 +222,7 @@ Function maingameinputs()
 			EndIf
 		Next
 		
+		;Send all players movement info
 		If usertype="host"
 			For playersend.player=Each player
 				If playersend\port<>UDPStreamPort(lanstream)
@@ -185,6 +232,7 @@ Function maingameinputs()
 			Next
 		EndIf
 		
+		;Send the host the movement info
 		If usertype="client"
 			WriteString(lanstream,"008"+currentkeycode)
 			hosts.host=First host
@@ -197,3 +245,5 @@ Function maingameinputs()
 		EndIf
 	EndIf
 End Function
+;~IDEal Editor Parameters:
+;~C#Blitz3D

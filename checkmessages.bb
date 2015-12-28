@@ -3,12 +3,14 @@ Function checkmessages(stream)
 		readstringstream$=ReadString(stream)
 		typeofmsg$=Mid$(readstringstream,1,3)
 		;Host revieves message from client looking for a server
+		
 		If typeofmsg="002" And usertype="host"
 			WriteString(stream,"003")
 			WriteString(stream,hostmap)
 			WriteString(stream,numofplayers)
 			SendUDPMsg stream,UDPMsgIP(stream),UDPMsgPort(stream)
 		EndIf
+		
 		;Client is notified that a server is there, and adds the server
 		If typeofmsg="003"
 			shouldadd=True
@@ -30,6 +32,7 @@ Function checkmessages(stream)
 				RotateEntity newhost\cube,0,0,Rnd(-180,180)
 			EndIf
 		EndIf
+		
 		;Ping test
 		If typeofmsg="035"
 			testtimer=MilliSecs()-testtimer
@@ -48,9 +51,10 @@ Function checkmessages(stream)
 			Next
 			
 			If addplayer=True
+				newplayer.player=New player
+				
 				currentPlayerType=currentPlayerType+1
 				
-				newplayer.player=New player
 				newplayer\ip=UDPMsgIP(stream)
 				newplayer\port=UDPMsgPort(stream)
 				newplayer\username=usernames
@@ -61,7 +65,7 @@ Function checkmessages(stream)
 				newplayer\collisionType=currentPlayerType
 				
 				playercolour(usernames)
-							
+				
 				red=0
 				green=0
 				blue=0
@@ -93,16 +97,39 @@ Function checkmessages(stream)
 					EndIf
 				Next
 			EndIf
+			
+			findmapdistance=True
+			typingprogress=False
+			FlushKeys()
+			
+			
+			For player.player=Each player
+				If player\username=myusername
+					hideoriginx=EntityX(player\cube)
+					hideoriginy=EntityY(player\cube)
+				EndIf
+			Next
+			programlocation="maingamesetup"
+			For player.player=Each player
+				If player\username<>myusername
+					WriteString lanstream,"016"
+					SendUDPMsg(lanstream,player\ip,player\port)
+				EndIf
+			Next
 		EndIf
 		
+		;Host has let you into the server, reciving other players info
 		If typeofmsg="005"
-		;Get all other players info
-		;Stop
 			Repeat
 				textread$=ReadString(stream)
 				If textread<>"End"
 					newplayer.player=New player
 					newplayer\username=Trim(Mid(textread,1,30))
+					
+					If newplayer\username="HostUserName"
+						newplayer\flag=True
+					EndIf
+					
 					newplayer\ip=Trim(Mid(textread,31,11))
 					newplayer\port=Trim(Mid(textread,42,5))
 					newplayer\cube=CreateCube()
@@ -264,8 +291,8 @@ Function checkmessages(stream)
 							SendUDPMsg(stream,player\ip,player\port)
 						EndIf
 					Next
-				FreeEntity players\cube
-				Delete players
+					FreeEntity players\cube
+					Delete players
 				EndIf
 			Next
 		EndIf
@@ -291,82 +318,105 @@ Function checkmessages(stream)
 		
 		;Update movement for each player, this is info from the server
 		If typeofmsg="012"
-				For players.player=Each player
-					If players\port=UDPMsgPort(stream) ;players\ip=UDPMsgIP(stream) And
-						If Mid(readstringstream,4,1)=1
-							MoveEntity players\cube,0,.3,0
-						EndIf
-						If Mid(readstringstream,5,1)=1
-							TurnEntity players\cube,0,0,4
-						EndIf
-						If Mid(readstringstream,6,1)=1
-							MoveEntity players\cube,0,-.3,0
-						EndIf
-						If Mid(readstringstream,7,1)=1
-							TurnEntity players\cube,0,0,-4
-						EndIf
-						RotateEntity players\cube,0,0,Int(EntityRoll(players\cube))
+			For players.player=Each player
+				If players\port=UDPMsgPort(stream) ;players\ip=UDPMsgIP(stream) And
+					If Mid(readstringstream,4,1)=1
+						MoveEntity players\cube,0,.3,0
 					EndIf
-				Next
-
-			EndIf
-			
-			;Send a message to the host to tell them that you are still in the lobby (working)
-			If typeofmsg="013"
-				WriteString(stream,"009")
-				hosts.host=First host
-				SendUDPMsg(stream,hosts\ip,hosts\port)
-				hosts\lastrecieve=MilliSecs()
-			EndIf
-			
-			;Delete another player that has left
-			If typeofmsg="014"
-				For player.player=Each player
-					If player\username=Mid(readstringstream,4,Len(readstringstream)-3)
-						DebugLog player\username
-						Stop
-						FreeEntity player\cube
-						Delete player
+					If Mid(readstringstream,5,1)=1
+						TurnEntity players\cube,0,0,4
 					EndIf
-				Next
-			EndIf
-			
-			;Add a new message to the chat box (working)
-			If typeofmsg="015"
-				For player.player=Each player
-					If player\ip=Trim$(Mid$(readstringstream,4,11)) And player\username<>myusername
-						chatbox.chatbox=New chatbox
-						chatbox\message=Mid$(readstringstream,15,Len(readstringstream)-14)
-						chatbox\ip=Trim$(Mid$(readstringstream,4,11))
+					If Mid(readstringstream,6,1)=1
+						MoveEntity players\cube,0,-.3,0
 					EndIf
-				Next
-			EndIf
+					If Mid(readstringstream,7,1)=1
+						TurnEntity players\cube,0,0,-4
+					EndIf
+					RotateEntity players\cube,0,0,Int(EntityRoll(players\cube))
+				EndIf
+			Next
 			
-			;Setup game for client
-			If typeofmsg="016"
-				findmapdistance=True
-				For player.player=Each player
+		EndIf
+		
+		;Send a message to the host to tell them that you are still in the lobby (working)
+		If typeofmsg="013"
+			WriteString(stream,"009")
+			hosts.host=First host
+			SendUDPMsg(stream,hosts\ip,hosts\port)
+			hosts\lastrecieve=MilliSecs()
+		EndIf
+		
+		;Delete another player that has left
+		If typeofmsg="014"
+			For player.player=Each player
+				If player\username=Mid(readstringstream,4,Len(readstringstream)-3)
+					DebugLog player\username
+					FreeEntity player\cube
+					Delete player
+				EndIf
+			Next
+		EndIf
+		
+		;Add a new message to the chat box (working)
+		If typeofmsg="015"
+			For player.player=Each player
+				If player\ip=Trim$(Mid$(readstringstream,4,11)) And player\username<>myusername
+					chatbox.chatbox=New chatbox
+					chatbox\message=Mid$(readstringstream,15,Len(readstringstream)-14)
+					chatbox\ip=Trim$(Mid$(readstringstream,4,11))
+				EndIf
+			Next
+		EndIf
+		
+		;Setup game for client
+		If typeofmsg="016"
+			findmapdistance=True
+			For player.player=Each player
 					;Start hiding map from player at center
-					If player\username=myusername
-						hideoriginx=EntityX(player\cube)
-						hideoriginy=EntityY(player\cube)
-					EndIf
-				Next
-				programlocation="maingamesetup"
-			EndIf
-			
+				If player\username=myusername
+					hideoriginx=EntityX(player\cube)
+					hideoriginy=EntityY(player\cube)
+				EndIf
+			Next
+			programlocation="maingamesetup"
+		EndIf
+		
 			;Collision message from server
-			If typeofmsg="017"
-				playerOne$=Trim(Mid(readstringstream,4,30))
-				playerTwo$=Trim(Mid(readstringstream,34,30))
-				For player.player = Each player
-					If player\username = playerOne
-						PositionEntity player\cube,Rnd(-10,10),Rnd(-10,10),0
-					ElseIf player\username = playerTwo
-						PositionEntity player\cube,Rnd(-10,10),Rnd(-10,10),0
+		If typeofmsg="017"
+			playerOne$=Trim(Mid(readstringstream,4,30))
+			playerTwo$=Trim(Mid(readstringstream,34,30))
+			spawnNum1=Trim(Mid(readstringstream,64,3))
+			spawnNum2=Trim(Mid(readstringstream,67,3))
+			flag=Mid(readstringstream,70,1)
+			
+			findSpawn1.spawn = First spawn
+			For i=1 To spawnNum1
+				findSpawn1 = After findSpawn1
+			Next
+			
+			findSpawn2.spawn = First spawn
+			For i=1 To spawnNum2
+				findSpawn2 = After findSpawn2
+			Next
+			
+			For player.player = Each player
+				If player\username = playerOne
+					If player\flag = True
+						player\flag = False
+					Else
+						player\flag = True
 					EndIf
-				Next
-			EndIf
+					PositionEntity player\cube,findSpawn1\dimX,findSpawn1\dimY,0
+				ElseIf player\username = playerTwo
+					If player\flag = True
+						player\flag = False
+					Else
+						player\flag = True
+					EndIf
+					PositionEntity player\cube,findSpawn2\dimX,findSpawn2\dimY,0
+				EndIf
+			Next
+		EndIf
 	Wend
 End Function
 ;~IDEal Editor Parameters:
